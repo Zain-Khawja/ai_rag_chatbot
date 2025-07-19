@@ -2,6 +2,8 @@
 from flask import Flask, request, jsonify
 from lib.ecommerce_agent import agent
 from flask_cors import CORS
+from flask import send_from_directory
+
 
 app = Flask(__name__)
 CORS(app, resources={r"/chat": {"origins": "*"}})  # Enable CORS for /chat
