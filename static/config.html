@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Chatbot Widget Configurator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    
+    body { 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #1f2937; 
+      margin: 0; 
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      color: white;
+    }
+    
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      margin: 0;
+    }
+    
+    .main-container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+    
+    .config-panel, .preview-panel {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      overflow: hidden;
+    }
+    
+    .panel-header {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white;
+      padding: 20px 24px;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    
+    .panel-content {
+      padding: 24px;
+    }
+    
+    .form-section {
+      margin-bottom: 32px;
+    }
+    
+    .section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-group.full-width {
+      grid-column: span 2;
+    }
+    
+    label {
+      display: block;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      background: white;
+    }
+    
+    input[type="color"] {
+      height: 45px;
+      padding: 4px;
+      cursor: pointer;
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+    
+    .generate-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 16px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.39);
+    }
+    
+    .generate-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px 0 rgba(79, 70, 229, 0.5);
+    }
+    
+    .embed-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+      font-size: 0.9rem;
+    }
+    
+    .embed-box pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 12px 0;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+    
+    .copy-btn {
+      background: #10b981;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.2s ease;
+    }
+    
+    .copy-btn:hover {
+      background: #059669;
+    }
+    
+    .preview-container {
+      position: relative;
+      height: 400px;
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    
+    .preview-content {
+      padding: 20px;
+      color: white;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    
+    .preview-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .preview-subtitle {
+      opacity: 0.9;
+      margin-bottom: 20px;
+    }
+    
+    .info-box {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 16px;
+      color: #1e40af;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    
+    @media (max-width: 768px) {
+      .main-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .form-group.full-width {
+        grid-column: span 1;
+      }
+      
+      .header h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>AI Chatbot Widget</h1>
+    <p>Configure and generate your custom chatbot embed code</p>
+  </div>
+  
+  <div class="main-container">
+    <!-- Configuration Panel -->
+    <div class="config-panel">
+      <div class="panel-header">
+        ⚙️ Widget Configuration
+      </div>
+      <div class="panel-content">
+        <form id="configForm">
+          <!-- Appearance Section -->
+          <div class="form-section">
+            <div class="section-title">🎨 Appearance</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Position</label>
+                <select name="position">
+                  <option value="bottom-right">Bottom Right</option>
+                  <option value="bottom-left">Bottom Left</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Widget Width (px)</label>
+                <input type="number" name="width" value="380" min="300" max="500">
+              </div>
+              <div class="form-group">
+                <label>Primary Color</label>
+                <input type="color" name="primaryColor" value="#4F46E5">
+              </div>
+              <div class="form-group">
+                <label>Hover Color</label>
+                <input type="color" name="primaryHover" value="#4338CA">
+              </div>
+              <div class="form-group">
+                <label>Background</label>
+                <input type="color" name="bgColor" value="#ffffff">
+              </div>
+              <div class="form-group">
+                <label>Widget Height (px)</label>
+                <input type="number" name="height" value="550" min="400" max="700">
+              </div>
+            </div>
+          </div>
+
+          <!-- Text & Colors Section -->
+          <div class="form-section">
+            <div class="section-title">📝 Text & Colors</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Text Color</label>
+                <input type="color" name="textColor" value="#1F2937">
+              </div>
+              <div class="form-group">
+                <label>Light Text Color</label>
+                <input type="color" name="textLight" value="#6B7280">
+              </div>
+              <div class="form-group full-width">
+                <label>Title</label>
+                <input type="text" name="title" value="AI Assistant" placeholder="Enter chatbot title">
+              </div>
+              <div class="form-group full-width">
+                <label>Welcome Message</label>
+                <input type="text" name="subtitle" value="How can I help you today? Ask me anything!" placeholder="Enter welcome message">
+              </div>
+            </div>
+          </div>
+
+          <!-- Technical Settings -->
+          <div class="form-section">
+            <div class="section-title">🔧 Technical Settings</div>
+            <div class="form-group">
+              <label>API URL</label>
+              <input type="text" name="apiUrl" value="http://localhost:5050/chat" placeholder="Enter your API endpoint">
+            </div>
+          </div>
+
+          <button type="button" class="generate-btn" id="generateBtn">
+            🚀 Generate Embed Code
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Preview & Output Panel -->
+    <div class="preview-panel">
+      <div class="panel-header">
+        👀 Preview & Embed Code
+      </div>
+      <div class="panel-content">
+        <div class="preview-container">
+          <!-- Exact Widget Preview -->
+          <div id="preview-chatbot-widget" style="
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            z-index: 10;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            transform: scale(0.6);
+            transform-origin: bottom right;
+          ">
+            <button id="preview-chat-button" style="
+              background-color: #4F46E5;
+              color: white;
+              border: none;
+              border-radius: 50%;
+              width: 60px;
+              height: 60px;
+              font-size: 24px;
+              cursor: pointer;
+              box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+              transition: all 0.3s ease;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              outline: none;
+            ">
+              <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'></path></svg>
+            </button>
+            
+            <div id="preview-chat-window" style="
+              display: none;
+              flex-direction: column;
+              width: 380px;
+              height: 550px;
+              position: absolute;
+              bottom: 70px;
+              right: 0;
+              background: #ffffff;
+              border-radius: 12px;
+              box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+              overflow: hidden;
+              transform-origin: bottom right;
+              animation: slideUp 0.3s ease;
+            ">
+              <div id="preview-chat-header" style="
+                background-color: #4F46E5;
+                color: white;
+                padding: 16px 20px;
+                font-weight: 600;
+                font-size: 16px;
+                text-align: center;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                border-top-left-radius: 12px;
+                border-top-right-radius: 12px;
+              ">
+                <div style="flex: 1;">AI Assistant</div>
+                <button onclick="closePreviewChat()" style="
+                  background: transparent;
+                  border: none;
+                  color: white;
+                  cursor: pointer;
+                  font-size: 18px;
+                  padding: 0;
+                  width: 24px;
+                  height: 24px;
+                  opacity: 0.8;
+                  transition: all 0.3s ease;
+                ">×</button>
+              </div>
+              
+              <div id="preview-chat-messages" style="
+                flex: 1;
+                padding: 20px;
+                overflow-y: auto;
+                font-size: 14px;
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                background-color: #F9FAFB;
+              ">
+                <div class="preview-welcome-message" style="
+                  font-size: 14px;
+                  text-align: center;
+                  padding: 16px;
+                  color: #6B7280;
+                  background-color: white;
+                  border-radius: 12px;
+                  margin: 12px 0;
+                  border: 1px solid #E5E7EB;
+                ">
+                  <div class="preview-welcome-title" style="
+                    font-weight: 600;
+                    font-size: 16px;
+                    margin-bottom: 8px;
+                    color: #1F2937;
+                  ">AI Assistant</div>
+                  <p style="margin: 0;">How can I help you today? Ask me anything!</p>
+                </div>
+                
+                <!-- Sample bot message -->
+                <div style="
+                  padding: 12px 16px;
+                  border-radius: 12px;
+                  max-width: 85%;
+                  word-wrap: break-word;
+                  line-height: 1.5;
+                  background: white;
+                  color: #1F2937;
+                  align-self: flex-start;
+                  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+                  border-bottom-left-radius: 4px;
+                  border: 1px solid #E5E7EB;
+                  animation: fadeIn 0.3s ease;
+                ">
+                  Hello! I'm your AI assistant. Feel free to ask me anything!
+                  <div style="
+                    font-size: 10px;
+                    color: #6B7280;
+                    margin-top: 4px;
+                    text-align: right;
+                    opacity: 0.8;
+                  ">12:00 PM</div>
+                </div>
+                
+                <!-- Sample user message -->
+                <div style="
+                  padding: 12px 16px;
+                  border-radius: 12px;
+                  max-width: 85%;
+                  word-wrap: break-word;
+                  line-height: 1.5;
+                  background: #4F46E5;
+                  color: white;
+                  align-self: flex-end;
+                  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+                  border-bottom-right-radius: 4px;
+                  animation: fadeIn 0.3s ease;
+                ">
+                  This is a preview message
+                  <div style="
+                    font-size: 10px;
+                    color: white;
+                    margin-top: 4px;
+                    text-align: right;
+                    opacity: 0.8;
+                  ">12:01 PM</div>
+                </div>
+              </div>
+              
+              <div id="preview-chat-input" style="
+                display: flex;
+                padding: 16px;
+                border-top: 1px solid #E5E7EB;
+                background-color: white;
+                position: relative;
+              ">
+                <input type="text" placeholder="Type your message..." style="
+                  flex: 1;
+                  padding: 12px 16px;
+                  border: 1px solid #E5E7EB;
+                  border-radius: 24px;
+                  font-size: 14px;
+                  outline: none;
+                  transition: all 0.3s ease;
+                  font-family: 'Inter', sans-serif;
+                " readonly>
+                <button style="
+                  margin-left: 12px;
+                  padding: 0;
+                  width: 42px;
+                  height: 42px;
+                  border: none;
+                  background: #4F46E5;
+                  color: white;
+                  border-radius: 50%;
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  transition: all 0.3s ease;
+                ">
+                  <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='22' y1='2' x2='11' y2='13'></line><polygon points='22 2 15 22 11 13 2 9 22 2'></polygon></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <style>
+          @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+        </style>
+        
+        <script>
+          function togglePreviewChat() {
+            const widget = document.getElementById('preview-chat-window');
+            if (widget) {
+              widget.style.display = widget.style.display === 'none' ? 'flex' : 'none';
+            }
+          }
+          
+          function closePreviewChat() {
+            document.getElementById('preview-chat-window').style.display = 'none';
+          }
+          
+          document.getElementById('preview-chat-button').onclick = togglePreviewChat;
+        </script>
+        
+        <div class="info-box">
+          <strong>📋 How to use:</strong><br>
+          1. Customize your chatbot settings<br>
+          2. Click "Generate Embed Code"<br>
+          3. Copy and paste the code into your website<br>
+          4. Ensure your API endpoint is accessible
+        </div>
+        
+        <div class="embed-box" id="embedBox" style="display:none;">
+          <strong>📝 Your Embed Code:</strong>
+          <div id="embedContent"></div>
+          <button class="copy-btn" onclick="copyEmbedCode()">📋 Copy to Clipboard</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    let generatedEmbedCode = '';
+    
+    document.getElementById('generateBtn').onclick = function() {
+      var form = document.getElementById('configForm');
+      var config = {};
+      Array.from(form.elements).forEach(function(el) {
+        if (el.name) config[el.name] = el.type === 'number' ? Number(el.value) : el.value;
+      });
+      
+      // Generate inline config embed code
+      var widgetSrc = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/widget.js');
+      var configInline =
+        '<script>\nwindow.AI_CHATBOT_CONFIG = ' +
+        JSON.stringify({
+          position: config.position,
+          primaryColor: config.primaryColor,
+          primaryHover: config.primaryHover,
+          bgColor: config.bgColor,
+          textColor: config.textColor,
+          textLight: config.textLight,
+          title: config.title,
+          subtitle: config.subtitle,
+          apiUrl: config.apiUrl,
+          welcomeTitle: config.title,
+          welcomeMessage: config.subtitle,
+          width: config.width,
+          height: config.height
+        }, null, 2) + ';\n<\/script>\n' +
+        '<script src="' + widgetSrc + '"><\/script>';
+      
+      generatedEmbedCode = configInline;
+      
+      var embedBox = document.getElementById('embedBox');
+      var embedContent = document.getElementById('embedContent');
+      
+      embedBox.style.display = 'block';
+      embedContent.innerHTML = '<pre>' + configInline.replace(/</g,'&lt;') + '</pre>';
+      
+      // Smooth scroll to embed code
+      embedBox.scrollIntoView({ behavior: 'smooth' });
+    };
+    
+    function copyEmbedCode() {
+      if (!generatedEmbedCode) return;
+      
+      navigator.clipboard.writeText(generatedEmbedCode).then(function() {
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = '✅ Copied!';
+        btn.style.background = '#059669';
+        
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.style.background = '#10b981';
+        }, 2000);
+      }).catch(function() {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = generatedEmbedCode;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = '✅ Copied!';
+        btn.style.background = '#059669';
+        
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.style.background = '#10b981';
+        }, 2000);
+      });
+    }
+    
+    // Real-time preview updates
+    document.getElementById('configForm').addEventListener('input', function(e) {
+      updatePreview();
+    });
+    
+    function updatePreview() {
+      const form = document.getElementById('configForm');
+      const config = {};
+      Array.from(form.elements).forEach(function(el) {
+        if (el.name) config[el.name] = el.type === 'number' ? Number(el.value) : el.value;
+      });
+      
+      // Update preview widget with exact widget.js styling
+      updatePreviewWidget(config);
+    }
+    
+    function updatePreviewWidget(config) {
+      const button = document.getElementById('preview-chat-button');
+      const window = document.getElementById('preview-chat-window');
+      const header = document.getElementById('preview-chat-header');
+      const welcomeTitle = document.querySelector('.preview-welcome-title');
+      const welcomeMessage = document.querySelector('.preview-welcome-message p');
+      const sendButton = document.querySelector('#preview-chat-input button');
+      const input = document.querySelector('#preview-chat-input input');
+      const widgetContainer = document.getElementById('preview-chatbot-widget');
+      
+      if (button) {
+        button.style.backgroundColor = config.primaryColor;
+        button.onmouseover = () => button.style.backgroundColor = config.primaryHover;
+        button.onmouseout = () => button.style.backgroundColor = config.primaryColor;
+      }
+      
+      if (window) {
+        window.style.width = config.width + 'px';
+        window.style.height = config.height + 'px';
+        window.style.background = config.bgColor;
+        
+        if (config.position === 'bottom-left') {
+          window.style.right = 'auto';
+          window.style.left = '0';
+          window.style.transformOrigin = 'bottom left';
+          widgetContainer.style.transformOrigin = 'bottom left';
+          widgetContainer.style.left = '12px';
+          widgetContainer.style.right = 'auto';
+        } else {
+          window.style.left = 'auto';
+          window.style.right = '0';
+          window.style.transformOrigin = 'bottom right';
+          widgetContainer.style.transformOrigin = 'bottom right';
+          widgetContainer.style.right = '12px';
+          widgetContainer.style.left = 'auto';
+        }
+      }
+      
+      if (header) {
+        header.style.backgroundColor = config.primaryColor;
+        header.firstElementChild.textContent = config.title;
+      }
+      
+      if (welcomeTitle) {
+        welcomeTitle.textContent = config.title;
+        welcomeTitle.style.color = config.textColor;
+      }
+      
+      if (welcomeMessage) {
+        welcomeMessage.textContent = config.subtitle;
+        welcomeMessage.parentElement.style.color = config.textLight;
+      }
+      
+      if (sendButton) {
+        sendButton.style.backgroundColor = config.primaryColor;
+        sendButton.onmouseover = () => {
+          sendButton.style.backgroundColor = config.primaryHover;
+          sendButton.style.transform = 'translateY(-1px)';
+        };
+        sendButton.onmouseout = () => {
+          sendButton.style.backgroundColor = config.primaryColor;
+          sendButton.style.transform = 'translateY(0)';
+        };
+      }
+      
+      if (input) {
+        input.onfocus = () => input.style.borderColor = config.primaryColor;
+        input.onblur = () => input.style.borderColor = '#E5E7EB';
+      }
+      
+      // Update user message color
+      const userMessage = document.querySelector('#preview-chat-messages > div:last-child');
+      if (userMessage && userMessage.style.background !== 'white') {
+        userMessage.style.backgroundColor = config.primaryColor;
+      }
+      
+      // Update bot message text color
+      const botMessage = document.querySelector('#preview-chat-messages > div:nth-child(2)');
+      if (botMessage) {
+        botMessage.style.color = config.textColor;
+      }
+    }
+    
+    // Initialize preview
+    updatePreview();
+  </script>
+</body>
+</html>

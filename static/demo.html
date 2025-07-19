@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatbot Widget Demo (Inline Config)</title>
+</head>
+<body>
+  <h2>Chatbot Widget Demo (Inline Config)</h2>
+  <p>This page demonstrates embedding the chatbot widget with inline configuration.</p>
+  <script>
+    window.AI_CHATBOT_CONFIG = {
+      position: 'bottom-right',
+      primaryColor: '#4F46E5',
+      primaryHover: '#4338CA',
+      bgColor: '#ffffff',
+      textColor: '#1F2937',
+      textLight: '#6B7280',
+      title: 'AI Assistant',
+      subtitle: 'How can I help you today? Ask me anything!',
+      apiUrl: 'http://localhost:5050/chat',
+      welcomeTitle: 'Welcome to AI Assistant',
+      welcomeMessage: 'How can I help you today? Ask me anything!',
+      width: 380,
+      height: 550
+    };
+  </script>
+  <script src="./widget.js"></script>
+</body>
+</html>
