@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: agno-chatbot
+    runtime: python-3.10
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python chatbot_server.py"
+    envVars:
+      - key: GOOGLE_API_KEY
+        value: your_api_key_here
