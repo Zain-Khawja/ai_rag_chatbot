@@ -18,13 +18,14 @@
       textLight: '#6B7280',
       title: 'AI Assistant',
       subtitle: 'How can I help you today? Ask me anything!',
-      apiUrl: 'http://localhost:5050/chat',
+      // Use current origin for API
+      apiUrl: window.location.origin + '/chat',
       welcomeTitle: 'Welcome to AI Assistant',
       welcomeMessage: 'How can I help you today? Ask me anything!',
       width: 380,
       height: 550
     };
   </script>
-  <script src="./widget.js"></script>
+  <script src="/static/widget.js"></script>
 </body>
 </html>

@@ -308,13 +308,13 @@
           </div>
 
           <!-- Technical Settings -->
-          <div class="form-section">
+          <!-- <div class="form-section">
             <div class="section-title">🔧 Technical Settings</div>
             <div class="form-group">
               <label>API URL</label>
               <input type="text" name="apiUrl" value="http://localhost:5050/chat" placeholder="Enter your API endpoint">
             </div>
-          </div>
+          </div> -->
 
           <button type="button" class="generate-btn" id="generateBtn">
             🚀 Generate Embed Code
@@ -572,7 +572,7 @@
       });
       
       // Generate inline config embed code
-      var widgetSrc = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/widget.js');
+      var widgetSrc = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/static/widget.js');
       var configInline =
         '<script>\nwindow.AI_CHATBOT_CONFIG = ' +
         JSON.stringify({
@@ -584,7 +584,7 @@
           textLight: config.textLight,
           title: config.title,
           subtitle: config.subtitle,
-          apiUrl: config.apiUrl,
+          apiUrl: window.location.origin + "/chat",
           welcomeTitle: config.title,
           welcomeMessage: config.subtitle,
           width: config.width,

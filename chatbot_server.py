@@ -19,6 +19,9 @@ def index():
 def static_files(path):
     return send_from_directory("static", path)
 
+app = Flask(__name__, static_url_path='/static', static_folder='static')
+
+
 @app.route("/demo")
 def demo():
     return send_from_directory("static", "demo.html")  # option
