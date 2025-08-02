@@ -268,3 +268,6 @@ yfinance
 zipp
 zstandard
 gunicorn
+fastembed
+psycopg2
+psycopg[binary]

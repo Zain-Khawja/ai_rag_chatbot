@@ -31,15 +31,10 @@ def chat():
     if request.method == "OPTIONS":
         return '', 200
     user_input = request.json.get("query", "")
-    prompt = f""" Answer the question using the knowledge base.
-    - Use bullet points and formatting.
-    - Focus on clarity and helpfulness.
-    Question: {user_input}
-    """
     
     print(f"Received query: {user_input}")
     
-    response = agent.run(prompt)
+    response = agent.run(user_input)
     return jsonify({"response": response.content})  # grab cont
 
 if __name__ == "__main__":
