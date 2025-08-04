@@ -1,6 +1,6 @@
 # chatbot_server.py
 from flask import Flask, request, jsonify
-from lib.ecommerce_agent import agent
+from lib.agents import agent, validation_agent
 from flask_cors import CORS
 from flask import send_from_directory
 import os
@@ -26,16 +26,115 @@ app = Flask(__name__, static_url_path='/static', static_folder='static')
 def demo():
     return send_from_directory("static", "demo.html")  # option
 
-@app.route("/chat", methods=["POST", "OPTIONS"])  # Handle preflight
+@app.route("/chat", methods=["POST", "OPTIONS"])
 def chat():
     if request.method == "OPTIONS":
         return '', 200
-    user_input = request.json.get("query", "")
     
+    data = request.json
+    user_input = data.get("query", "")
+    user_id = data.get("user_id", "default_user")
+    session_id = data.get("session_id")
+        
     print(f"Received query: {user_input}")
     
-    response = agent.run(user_input)
-    return jsonify({"response": response.content})  # grab cont
+    max_attempts = 2
+    attempt = 0
+    original_query = user_input  # Store original query
+    
+    while attempt < max_attempts:
+        attempt += 1
+        print(f"Attempt {attempt}/{max_attempts}")
+        
+        # Get response from main agent
+        response = agent.run(
+            user_input, 
+            user_id=user_id,
+            session_id=session_id
+        )
+        
+        print(f"Main agent response length: {len(response.content)}")
+        
+        # Validate the response
+        validation_prompt = f"""
+        Validate this customer service response:
+        
+        USER QUERY: "{original_query}"
+        AGENT RESPONSE: "{response.content}"
+        
+        Check for:
+        1. Relevance to user's question
+        2. Completeness of answer
+        3. Proper formatting (product cards, clarification questions)
+        4. Accuracy from knowledge base
+        
+        Respond with either:
+        - "APPROVED" if the response is good
+        - "REJECTED: [specific issues]" if there are problems
+        """
+        
+        validation_result = validation_agent.run(validation_prompt)
+        print(f"Full validation result: {validation_result.content}")
+        
+        # Extract the actual validation decision from reasoning output
+        validation_content = validation_result.content.lower()
+        
+        # Check if response contains approval or rejection
+        if "approved" in validation_content or "good" in validation_content:
+            print("✅ Response approved by validation agent")
+            return jsonify({
+                "response": response.content,
+                "session_id": agent.session_id,
+                "validation_status": "approved",
+                "attempts": attempt
+            })
+        
+        elif "rejected" in validation_content or "issues" in validation_content or "problems" in validation_content:
+            print(f"❌ Response rejected on attempt {attempt}")
+            
+            if attempt < max_attempts:
+                # Create regeneration prompt with feedback
+                regeneration_prompt = f"""
+                The user asked: "{original_query}"
+                
+                My previous response had quality issues. Please provide a better response that:
+                - Directly addresses the user's question
+                - Follows proper formatting guidelines
+                - Asks clarifying questions if needed
+                - Uses knowledge base information accurately
+                
+                Original user query: {original_query}
+                """
+                
+                print("🔄 Regenerating response with improvements...")
+                user_input = regeneration_prompt
+                continue
+            else:
+                print("⚠️ Max attempts reached, returning last response")
+                return jsonify({
+                    "response": response.content,
+                    "session_id": agent.session_id,
+                    "validation_status": "rejected_max_attempts",
+                    "attempts": attempt,
+                    "validation_feedback": validation_result.content
+                })
+        else:
+            # If validation result is unclear, approve by default
+            print("⚠️ Unclear validation result, approving by default")
+            return jsonify({
+                "response": response.content,
+                "session_id": agent.session_id,
+                "validation_status": "approved_default",
+                "attempts": attempt
+            })
+    
+    # Fallback
+    return jsonify({
+        "response": response.content,
+        "session_id": agent.session_id,
+        "validation_status": "fallback",
+        "attempts": attempt
+    })
 
 if __name__ == "__main__":
     # app.run(port=5050) # Use this for local testing

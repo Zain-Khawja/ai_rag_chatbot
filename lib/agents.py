@@ -1,5 +1,7 @@
 # ecommerce_agent.py
+from ast import mod
 from agno.agent import Agent
+from agno.tools.reasoning import ReasoningTools
 from agno.vectordb.chroma import ChromaDb
 from agno.knowledge.json import JSONKnowledgeBase
 from agno.models.google import Gemini  # Google Gem
@@ -7,6 +9,9 @@ from agno.embedder.google import GeminiEmbedder  # Google Gemini embedder
 from agno.vectordb.pgvector import PgVector
 from agno.embedder.fastembed import FastEmbedEmbedder  # New embedder
 from agno.knowledge.json import JSONKnowledgeBase
+from agno.storage.sqlite import SqliteStorage
+from agno.memory.v2.db.sqlite import SqliteMemoryDb
+from agno.memory.v2.memory import Memory
 from lib.config import PGVECTOR_DB_URL
 
 from lib.config import GEMINI_API_KEY
@@ -35,61 +40,41 @@ kb = JSONKnowledgeBase(
     chunk_overlap=32
 )
 
-# agent = Agent(
-#     model=Gemini(id="gemini-2.0-flash", api_key=api_key),
-#     knowledge=kb,
-#     search_knowledge=True,
-#     instructions=[
-#         "You are a friendly AI assistant for AAA Safe, a safety and industrial product company.",
-#         "IMPORTANT: For ANY questions about company history, information, policies, or services - search the knowledge base and provide information ONLY from there. Do not make assumptions or provide fixed facts.",
-#         "For product recommendations and catalog items:",
-#         "When presenting products, create beautiful modern cards using this exact format:",
-#         "For each product, use this structure:",
-#         "<div class='ai-product-card'>",
-#         "  <div class='product-header'>",
-#         "    <h3 class='product-title'><a href='PRODUCT_URL' target='_blank'>PRODUCT_NAME</a></h3>",
-#         "    <span class='product-category'>CATEGORY</span>",
-#         "  </div>",
-#         "  <div class='product-content'>",
-#         "    <p class='product-description'>BRIEF_DESCRIPTION (2-3 sentences max)</p>",
-#         "    <div class='product-specs'>",
-#         "      <span class='spec-item'><strong>Stock:</strong> AVAILABILITY</span>",
-#         "      <span class='spec-item'><strong>Weight:</strong> WEIGHT_INFO</span>",
-#         "      <span class='spec-item'><strong>Packing:</strong> PACKING_INFO</span>",
-#         "    </div>",
-#         "  </div>",
-#         "  <div class='product-actions'>",
-#         "    <a href='PRODUCT_URL' target='_blank' class='view-product-btn'>View Product</a>",
-#         "  </div>",
-#         "</div>",
-#         "Optional enhancements (if data available):",
-#         "- Add product images: <img src='IMAGE_URL' alt='PRODUCT_NAME' class='product-image' />",
-#         "- Add price information: <span class='product-price'>₹PRICE</span>",
-#         "- Add rating: <div class='product-rating'>⭐⭐⭐⭐⭐ (5.0)</div>",
-#         "- Add badges: <span class='product-badge featured'>Featured</span>",
-#         "Guidelines for product cards:",
-#         "- Extract product URL from the body text (look for 'Link: https://...')",
-#         "- Use the main category from the Categories field",
-#         "- Create a brief, engaging description from the body content",
-#         "- Include key specifications like stock status, weight, packing info",
-#         "- Keep descriptions concise and informative",
-#         "- Always include the 'View Product' button with the correct URL",
-#         "- Focus on the most important features and benefits in the description",
-#         "If the question is vague or unclear, politely ask the user to rephrase or clarify.",
-#         "If the user greets you or thanks you, respond naturally (e.g., 'Hi there!', 'You're welcome!', 'Glad to help!').",
-#         "If the question is about topics completely unrelated to safety products, industrial equipment, or business matters (e.g., historical facts about other countries, celebrities, math problems, sports, entertainment, etc.), reply politely:",
-#         "'I'm not sure about that, but I can help you with our safety products, company info, or policies. What would you like to know?'",
-#         "Never make up or guess information. Only answer from the data you have access to."
-#     ]
-# )
-
+# Add storage and memory
+agent_storage = SqliteStorage(
+    table_name="agent_sessions", 
+    db_file="tmp/agents.db"
+)
+memory = Memory(
+    model=Gemini(id="gemini-2.0-flash", api_key=api_key),
+    db=SqliteMemoryDb(
+        table_name="user_memories",
+        db_file="tmp/memory.db"
+    )
+)
 
 agent = Agent(
     model=Gemini(id="gemini-2.0-flash", api_key=api_key),
     knowledge=kb,
     search_knowledge=True,
+    # memory & storage
+    storage=agent_storage,
+    memory=memory,
+    add_history_to_messages=True,
+    num_history_runs=3,
+    enable_user_memories=True,
+    read_chat_history=True,
+    # instructions
     instructions=[
         "You are a friendly AI assistant for AAA Safe, a safety and industrial product company.",
+        
+        # Follow-up Clarification
+        "When a user asks a vague or broad question (e.g. 'I need safety equipment' or 'Tell me about jackets'):",
+        "- Politely ask a follow-up to narrow down their intent",
+        "- Suggest 2-3 popular options or categories to help them choose",
+        "- Use phrasing like: 'Could you tell me more about what you're looking for?', 'Are you looking for ___ or ___?', 'Do you need it for ___ use?'",
+        "- Wait for user input before showing full product cards unless it's already clear",
+
         
         # Company Information Handling
         "For company-related questions (history, about us, contact, policies, terms, etc.):",
@@ -153,3 +138,33 @@ agent = Agent(
     ]
 )
 
+# Validation agent with reasoning tools
+validation_agent = Agent(
+    model=Gemini(id="gemini-2.0-flash", api_key=api_key),
+    tools=[ReasoningTools(add_instructions=True, add_few_shot=True)],
+    instructions=[
+        "You are a response quality validator for AAA Safe's customer service agent.",
+        
+        "VALIDATION CRITERIA:",
+        "1. RELEVANCE: Does the response address the user's actual question?",
+        "2. COMPLETENESS: Are all parts of the question answered?",
+        "3. INSTRUCTION COMPLIANCE: Were formatting rules followed?",
+        "   - Product cards use correct HTML structure",
+        "   - Clarification questions asked when needed",
+        "   - Company info searched from knowledge base",
+        "4. ACCURACY: Is information from knowledge base correct?",
+        "5. HELPFULNESS: Does it provide value to the user?",
+        
+        "RESPONSE FORMAT:",
+        "- If response is GOOD: Return 'APPROVED: Response meets quality standards.'",
+        "- If response has ISSUES: Return 'REJECTED: [specific issues found]' followed by detailed improvement suggestions",
+        
+        "SPECIFIC CHECKS:",
+        "- For product queries: Check if product cards are properly formatted",
+        "- For vague queries: Check if clarifying questions were asked",
+        "- For company queries: Check if knowledge base was searched",
+        "- For unrelated queries: Check if politely redirected",
+        
+        "Be thorough but concise in your validation."
+    ]
+)

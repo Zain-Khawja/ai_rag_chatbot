@@ -6,6 +6,9 @@
   }
 
   waitForConfig(function(config) {
+    let sessionId = null;
+    const userId = "user_123";  // Optional: Use user email or login ID if available
+
     // Inject full CSS from index.html, replacing selectors for widget
     var style = document.createElement('style');
     style.innerHTML = `
@@ -794,12 +797,19 @@
             var res = await fetch(config.apiUrl, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ query })
+              body: JSON.stringify({ 
+                query,
+                user_id: userId,
+                session_id: sessionId
+               })
             });
             removeLoadingIndicator();
             if (!res.ok) throw new Error('Server responded with status: ' + res.status);
+            console.log(res);
             var data = await res.json();
             console.log(data);
+            sessionId = data.session_id;
+
             appendMessage(data.response, false);
           } catch (err) {
             removeLoadingIndicator();
