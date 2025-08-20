@@ -38,6 +38,10 @@ def fetch_all():
                         "attributes": v.get("attributes")
                     })
 
+            # Extract image URL (first image if multiple)
+            images = p.get('images', [])
+            image_url = images[0].get('src') if images else None
+            
             product_entry = {
                 "title": p.get("name"),
                 "body": (
@@ -48,7 +52,8 @@ def fetch_all():
                     f"Type: {p.get('type')}\n"
                     f"Categories: {', '.join([c['name'] for c in p.get('categories', [])])}\n"
                     f"Attributes: {p.get('attributes', [])}\n"
-                    f"Variations: {variations_info if variations_info else 'None'}"
+                    f"Variations: {variations_info if variations_info else 'None'}\n"
+                    f"Image: {image_url if image_url else 'N/A'}\n"
                     f"Link: {p.get('permalink')}"
                 )
             }

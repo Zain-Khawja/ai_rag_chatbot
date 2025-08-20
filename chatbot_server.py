@@ -1,6 +1,7 @@
 # chatbot_server.py
 from flask import Flask, request, jsonify
 from lib.agents import agent, validation_agent
+from lib.chat_logger import ChatLogger
 from flask_cors import CORS
 from flask import send_from_directory
 import os
@@ -9,6 +10,9 @@ import os
 
 app = Flask(__name__)
 CORS(app, resources={r"/chat": {"origins": "*"}})  # Enable CORS for /chat
+
+# Initialize the chat logger
+chat_logger = ChatLogger()
 
 
 @app.route("/")
@@ -82,6 +86,17 @@ def chat():
         # Check if response contains approval or rejection
         if "approved" in validation_content or "good" in validation_content:
             print("✅ Response approved by validation agent")
+            
+            # Log the chat interaction
+            chat_logger.log_chat(
+                user_id=user_id,
+                question=original_query,
+                answer=response.content,
+                session_id=agent.session_id,
+                validation_status="approved",
+                attempts=attempt
+            )
+            
             return jsonify({
                 "response": response.content,
                 "session_id": agent.session_id,
@@ -111,6 +126,17 @@ def chat():
                 continue
             else:
                 print("⚠️ Max attempts reached, returning last response")
+                
+                # Log the chat interaction with rejected status
+                chat_logger.log_chat(
+                    user_id=user_id,
+                    question=original_query,
+                    answer=response.content,
+                    session_id=agent.session_id,
+                    validation_status="rejected_max_attempts",
+                    attempts=attempt
+                )
+                
                 return jsonify({
                     "response": response.content,
                     "session_id": agent.session_id,
@@ -121,6 +147,17 @@ def chat():
         else:
             # If validation result is unclear, approve by default
             print("⚠️ Unclear validation result, approving by default")
+            
+            # Log the chat interaction with approved_default status
+            chat_logger.log_chat(
+                user_id=user_id,
+                question=original_query,
+                answer=response.content,
+                session_id=agent.session_id,
+                validation_status="approved_default",
+                attempts=attempt
+            )
+            
             return jsonify({
                 "response": response.content,
                 "session_id": agent.session_id,
@@ -129,12 +166,38 @@ def chat():
             })
     
     # Fallback
+    # Log the chat interaction with fallback status
+    chat_logger.log_chat(
+        user_id=user_id,
+        question=original_query,
+        answer=response.content,
+        session_id=agent.session_id,
+        validation_status="fallback",
+        attempts=attempt
+    )
+    
     return jsonify({
         "response": response.content,
         "session_id": agent.session_id,
         "validation_status": "fallback",
         "attempts": attempt
     })
+
+@app.route("/chat-history", methods=["GET"])
+def get_chat_history():
+    """Get chat history for a user or session"""
+    user_id = request.args.get("user_id")
+    session_id = request.args.get("session_id")
+    limit = request.args.get("limit", 10, type=int)
+    
+    if session_id:
+        history = chat_logger.get_session_chat_history(session_id, limit)
+        return jsonify({"session_id": session_id, "history": history})
+    elif user_id:
+        history = chat_logger.get_user_chat_history(user_id, limit)
+        return jsonify({"user_id": user_id, "history": history})
+    else:
+        return jsonify({"error": "Either user_id or session_id must be provided"}), 400
 
 if __name__ == "__main__":
     # app.run(port=5050) # Use this for local testing

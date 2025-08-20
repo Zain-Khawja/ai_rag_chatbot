@@ -87,6 +87,31 @@
         border-top-right-radius: var(--border-radius);
       }
       .header-title { flex: 1; }
+      .header-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .header-button {
+        background: transparent;
+        border: none;
+        color: white;
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 6px;
+        opacity: 0.8;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+      }
+      .header-button:hover { 
+        opacity: 1; 
+        background: rgba(255,255,255,0.1);
+      }
       .close-button {
         background: transparent;
         border: none;
@@ -141,6 +166,12 @@
         padding: 2px 4px;
         border-radius: 4px;
         font-size: 13px;
+      }
+      .message-reactions {
+        display: none;
+      }
+      .reaction-btn {
+        display: none;
       }
       .user-message {
         background: var(--primary-color);
@@ -302,15 +333,17 @@
         opacity: 1;
       }
       
-      .product-header {
-        margin-bottom: 12px;
+      .product-content {
+        margin-bottom: 16px;
+        text-align: left;
       }
       
       .product-title {
-        margin: 0 0 6px 0;
-        font-size: 18px;
+        margin: 12px 0 8px 0;
+        font-size: 16px;
         font-weight: 600;
         line-height: 1.3;
+        text-align: left;
       }
       
       .product-title a {
@@ -323,92 +356,34 @@
         color: var(--primary-color);
       }
       
-      .product-category {
-        display: inline-block;
-        background: #F3F4F6;
-        color: #6B7280;
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-      }
-      
-      .product-content {
-        margin-bottom: 16px;
-      }
-      
       .product-description {
-        margin: 0 0 12px 0;
+        margin: 8px 0 0 0;
         font-size: 14px;
         line-height: 1.6;
         color: #4B5563;
+        text-align: left;
         display: -webkit-box;
-        -webkit-line-clamp: 4;
+        -webkit-line-clamp: 3;
         -webkit-box-orient: vertical;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-height: calc(1.6em * 4);
-      }
-      
-      /* Fallback for browsers that don't support -webkit-line-clamp */
-      @supports not (-webkit-line-clamp: 4) {
-        .product-description {
-          position: relative;
-          max-height: calc(1.6em * 4);
-          overflow: hidden;
-        }
-        
-        .product-description::after {
-          content: '...';
-          position: absolute;
-          bottom: 0;
-          right: 0;
-          background: white;
-          padding-left: 4px;
-          font-weight: bold;
-        }
-      }
-      
-      .product-specs {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 8px;
-        margin-bottom: 16px;
-      }
-      
-      .spec-item {
-        display: flex;
-        align-items: center;
-        font-size: 12px;
-        color: #6B7280;
-        background: #F9FAFB;
-        padding: 6px 10px;
-        border-radius: 6px;
-        border: 1px solid #E5E7EB;
-      }
-      
-      .spec-item strong {
-        color: #374151;
-        margin-right: 4px;
-        font-weight: 600;
+        max-height: calc(1.6em * 3);
       }
       
       .product-actions {
         display: flex;
-        justify-content: flex-end;
+        justify-content: flex-start;
       }
       
       .view-product-btn {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 8px 16px;
+        padding: 12px 24px;
         background: var(--primary-color);
         color: white;
         border-radius: 8px;
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 500;
         text-decoration: none;
         transition: all 0.2s ease;
@@ -531,11 +506,21 @@
       /* Optional: Product image styling */
       .product-image {
         width: 100%;
-        height: 120px;
+        height: 150px;
         object-fit: cover;
         border-radius: 8px;
-        margin-bottom: 12px;
+        margin-bottom: 0;
         background: #F3F4F6;
+        display: block;
+      }
+      
+      .product-image[style*="display: none"] {
+        display: none !important;
+      }
+      
+      /* Hide image container if no image */
+      .ai-product-card .product-content:has(.product-image[style*="display: none"]) .product-image {
+        margin-bottom: 0;
       }
       
       /* Optional: Price styling */
@@ -655,7 +640,15 @@
       <div id="ai-chat-window">
         <div id="ai-chat-header" style="background: var(--primary-color); color: white; padding: 16px 20px; font-weight: 600; font-size: 16px; text-align: center; display: flex; align-items: center; justify-content: space-between; border-top-left-radius: var(--border-radius); border-top-right-radius: var(--border-radius);">
           <div class="header-title" style="flex:1;">${config.title}</div>
-          <button class="close-button" id="ai-close-chat" style="background:transparent; border:none; color:white; cursor:pointer; font-size:18px; width:24px; height:24px; opacity:0.8;">×</button>
+          <div class="header-actions" style="display: flex; gap: 8px; align-items: center;">
+            <button class="header-button" id="ai-expand-chat" title="Expand/Shrink window" style="background:transparent; border:none; color:white; cursor:pointer; padding:6px; border-radius:6px; opacity:0.8; transition:all 0.2s ease; display:flex; align-items:center; justify-content:center; width:28px; height:28px; font-size:14px;">
+              <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3'></path></svg>
+            </button>
+            <button class="header-button" id="ai-clear-chat" title="Clear conversation" style="background:transparent; border:none; color:white; cursor:pointer; padding:6px; border-radius:6px; opacity:0.8; transition:all 0.2s ease; display:flex; align-items:center; justify-content:center; width:28px; height:28px; font-size:14px;">
+              <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 6h18l-2 13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L3 6zM8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'></path></svg>
+            </button>
+            <button class="close-button" id="ai-close-chat" style="background:transparent; border:none; color:white; cursor:pointer; font-size:18px; width:24px; height:24px; opacity:0.8;">×</button>
+          </div>
         </div>
         <div id="ai-chat-messages" style="flex:1; padding:20px; overflow-y:auto; font-size:14px; display:flex; flex-direction:column; gap:16px; background-color:#F9FAFB;">
           <div class="welcome-message" style="font-size:14px; text-align:center; padding:16px; color:var(--text-light); background-color:white; border-radius:var(--border-radius); margin:12px 0; border:1px solid #E5E7EB;">
@@ -690,6 +683,12 @@
         var chatInput = document.getElementById('ai-chatText');
         var sendButton = document.getElementById('ai-send-button');
         var closeButton = document.getElementById('ai-close-chat');
+        var clearButton = document.getElementById('ai-clear-chat');
+        var expandButton = document.getElementById('ai-expand-chat');
+        
+        var isExpanded = false;
+        var originalWidth = config.width;
+        var originalHeight = config.height;
 
         button.onclick = function() {
           windowEl.style.display = windowEl.style.display === 'none' ? 'flex' : 'none';
@@ -698,10 +697,51 @@
         closeButton.onclick = function() {
           windowEl.style.display = 'none';
         };
+        clearButton.onclick = function() {
+          if (confirm('Clear conversation history?')) {
+            clearConversation();
+          }
+        };
+        expandButton.onclick = function() {
+          toggleWindowSize();
+        };
         chatInput.addEventListener('keypress', function(e) {
           if (e.key === 'Enter') sendChat();
         });
         sendButton.addEventListener('click', sendChat);
+
+        function toggleWindowSize() {
+          if (isExpanded) {
+            // Shrink to original size
+            windowEl.style.width = originalWidth + 'px';
+            windowEl.style.height = originalHeight + 'px';
+            expandButton.title = 'Expand window';
+            expandButton.innerHTML = `
+              <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3'></path></svg>
+            `;
+            isExpanded = false;
+          } else {
+            // Expand to larger size
+            windowEl.style.width = Math.min(originalWidth * 1.4, window.innerWidth - 100) + 'px';
+            windowEl.style.height = Math.min(originalHeight * 1.3, window.innerHeight - 100) + 'px';
+            expandButton.title = 'Shrink window';
+            expandButton.innerHTML = `
+              <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 14h6m0 0v6m0-6l-7 7M20 10h-6m0 0V4m0 6l7-7'></path></svg>
+            `;
+            isExpanded = true;
+          }
+        }
+
+        function clearConversation() {
+          // Keep welcome message but remove all other messages
+          var welcomeMsg = messages.querySelector('.welcome-message');
+          messages.innerHTML = '';
+          if (welcomeMsg) {
+            messages.appendChild(welcomeMsg.cloneNode(true));
+          }
+          // Reset session
+          sessionId = null;
+        }
 
         function getTimeString() {
           var now = new Date();
@@ -720,15 +760,6 @@
             
             // Enhanced product card handling
             setTimeout(() => {
-              // Add stock status classes
-              msg.querySelectorAll('.spec-item').forEach(spec => {
-                if (spec.textContent.includes('Stock: instock')) {
-                  spec.classList.add('stock-instock');
-                } else if (spec.textContent.includes('Stock: outofstock')) {
-                  spec.classList.add('stock-outofstock');
-                }
-              });
-              
               // Add click tracking for product links
               msg.querySelectorAll('.ai-product-card a').forEach(link => {
                 link.setAttribute('target', '_blank');
@@ -753,6 +784,14 @@
               const cards = msg.querySelectorAll('.ai-product-card');
               cards.forEach((card, index) => {
                 card.style.animationDelay = (index * 0.1) + 's';
+              });
+              
+              // Handle product images
+              msg.querySelectorAll('.product-image').forEach(img => {
+                img.onerror = function() {
+                  this.style.display = 'none';
+                  this.style.marginBottom = '0';
+                };
               });
               
             }, 100);
